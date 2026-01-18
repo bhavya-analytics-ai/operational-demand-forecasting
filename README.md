@@ -1,96 +1,142 @@
-# 📦 Operational Forecasting & Monitoring System
+# 📦 Operational Forecasting & Monitoring System (NYC 311)
 
-Decision-focused demand forecasting system built on NYC 311 data to support operational and capacity planning.
+Decision-focused time-series forecasting system designed to support operational and capacity planning using NYC 311 demand data.
+
+This project prioritizes **decision quality, baseline rigor, and monitoring** over model complexity.
 
 ---
 
-## 🎯 Decision Framing
+## 🎯 Decision Framing (Level 0)
 
-This project is framed around a practical operational question:
+The system is built around a concrete operational question:
 
 What level of demand should operations plan for?
 
-Two decision targets were evaluated:
-- Next-day demand for short-term responsiveness
-- 7-day average demand for staffing and capacity planning
+Two decision targets were explicitly evaluated:
+- Next-day demand (short-term responsiveness)
+- 7-day average demand (capacity and staffing planning)
 
-Model selection was driven by decision usefulness, not algorithmic complexity.
+All modeling choices were evaluated based on **decision usefulness**, not predictive novelty.
 
 ---
 
-## 🔄 Data & Pipeline
+## ☁️ Data Ingestion & Storage (Level 1)
 
 - Source: NYC 311 service request data (2023–2024)
-- Raw data stored in AWS S3 (source of truth)
-- Daily request counts aggregated locally
-- Missing days detected and filled
-- Explicit time-series feature engineering applied
+- Raw data stored in AWS S3 as the system of record
+- Local workflows operate on derived, reproducible datasets only
 
-Engineered features include:
-- Lag features (1, 7, 14 days)
-- Rolling statistics (mean and standard deviation over 7 and 14 days)
-- Calendar features (day of week, week of year)
+This separation avoids coupling modeling logic to raw ingestion.
 
 ---
 
-## 📊 Modeling & Results
+## 🔍 Data Validation & Quality Checks (Level 2)
 
-Two modeling approaches were evaluated using identical data splits and features.
+Before modeling, the pipeline enforces explicit data quality checks:
+- Date parsing and ordering validation
+- Duplicate detection
+- Missing-day detection and reporting
+- QA summary generated for traceability
 
-Baseline models:
-- Next-day demand: lag-1 baseline  
+No modeling is performed until validation passes.
+
+---
+
+## 🧱 Feature Engineering (Level 3)
+
+Explicit time-series features are constructed from daily request counts:
+
+- Lag features: 1, 7, 14 days
+- Rolling statistics: mean and standard deviation (7, 14)
+- Calendar features: day of week, week of year
+
+All features are generated deterministically and stored as processed artifacts.
+
+---
+
+## 📊 Baseline Modeling (Level 4)
+
+Baseline models are treated as first-class candidates.
+
+Results:
+- Next-day demand (lag-1 baseline):  
   MAE ~ 926
-- 7-day average demand: rolling mean (7 days)  
+- 7-day average demand (rolling mean, 7 days):  
   MAE ~ 281
 
-Gradient Boosting:
-- Trained using the same feature set
-- Evaluated under the same conditions
-
-Result:  
-Gradient Boosting did not outperform baseline models for either decision target.
+The 7-day rolling baseline achieved low error relative to operational scale.
 
 ---
 
-## 🧠 Why Machine Learning Was Not Selected
+## 🌲 Gradient Boosting Benchmark (Level 5)
 
-Although a Gradient Boosting model was implemented and evaluated, it did not improve decision quality over simple statistical baselines.
+A Gradient Boosting model was implemented and evaluated using:
+- The same feature set
+- Identical splits and evaluation logic
 
-Key observations:
-- Demand showed strong short-term autocorrelation
-- Rolling averages already captured the relevant signal
-- Added model complexity did not reduce operational error
+Result:
+- Gradient Boosting did not outperform baseline models for either decision target
 
-The baseline model was intentionally selected as the operational decision model.
+The ML model is retained as a benchmark, not selected for production use.
 
 ---
 
-## 🚦 Forecast Monitoring
+## 🧠 Error Analysis & Model Selection (Level 6)
 
-Forecast reliability is monitored using rolling error metrics.
+Analysis showed:
+- Strong short-term autocorrelation in demand
+- Rolling averages already captured the dominant signal
+- Added model complexity did not reduce decision-level error
+
+The baseline model was intentionally selected as the operational model.
+
+---
+
+## 🚦 Forecast Monitoring (Level 7)
+
+Forecast reliability is monitored using rolling error metrics:
 
 - Rolling MAE computed over a 28-day window
 - Thresholds defined relative to baseline MAE
-- Status flags: OK, WARN, ALERT
+- Status states:
+  - OK
+  - WARN
+  - ALERT
 
-This enables early detection of forecast degradation without immediate retraining.
+This enables early detection of degradation without immediate retraining.
+
+---
+
+## 📈 Decision View & Interpretation (Level 8)
+
+A decision-oriented notebook visualizes:
+- Actual vs forecasted demand (7-day average)
+- Rolling MAE trends over time
+- Current system status relative to thresholds
+
+The output is designed for **operational interpretation**, not model debugging.
 
 ---
 
 ## 🗂 Repository Structure
-
+```
 operational-demand-forecasting/
 ├── data/
 │   └── processed/
 ├── src/
+│   ├── download_raw.py
+│   ├── aggregate.py
+│   ├── validate.py
+│   ├── features.py
 │   ├── baseline.py
+│   ├── baseline_7day.py
 │   ├── train_gb.py
 │   ├── monitor_7day.py
 ├── notebooks/
 │   └── level8_decision_view.ipynb
 ├── README.md
 └── requirements.txt
-
+```
 ---
 
 ## ▶️ Reproducibility
@@ -107,7 +153,7 @@ Raw data is expected to be sourced from AWS S3.
 
 ## ✅ Key Takeaways
 
-- Decision framing defines what good performance means
+- Decision framing determines what “good performance” means
 - Simple baselines can outperform ML for operational planning
-- Monitoring is as important as model selection
-- Model complexity was rejected when it did not improve decisions
+- Monitoring is as important as model choice
+- ML was evaluated and intentionally rejected when it did not improve decisions
