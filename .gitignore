@@ -1,0 +1,12 @@
+# OS junk
+.DS_Store
+
+# Environments
+forecast-env/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Raw data (reproducible)
+data/raw/
