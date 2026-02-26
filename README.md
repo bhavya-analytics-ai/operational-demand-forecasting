@@ -170,4 +170,13 @@ Raw data is expected to be sourced from AWS S3.
 - Decision framing determines what “good performance” means  
 - Simple baselines can outperform ML for operational planning  
 - Monitoring is as important as model choice  
-- ML was evaluated and intentionally rejected when it did not improve decisions  
+- ML was evaluated and intentionally rejected when it did not improve decisions
+
+
+---
+
+## Author
+
+**Bhavya Pandya**  
+LinkedIn: https://www.linkedin.com/in/bhavya-91p/
+
